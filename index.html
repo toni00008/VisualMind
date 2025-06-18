@@ -1,67 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Text to Image AI</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #0d0d10;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-    }
-    input, button {
-      padding: 12px;
-      font-size: 16px;
-      margin: 10px 0;
-      width: 100%;
-      max-width: 400px;
-    }
-    img {
-      max-width: 100%;
-      border-radius: 12px;
-      margin-top: 20px;
-    }
-  </style>
-</head>
-<body>
-  <h1>🧠 Text to Image AI</h1>
-  <input type="text" id="prompt" placeholder="Describe your image..." />
-  <button onclick="generateImage()">Generate</button>
-  <div id="output"></div>
+async function generateImage() {
+  const prompt = document.getElementById("prompt").value;
+  const output = document.getElementById("output");
 
-  <script>
-    async function generateImage() {
-      const prompt = document.getElementById("prompt").value;
-      const output = document.getElementById("output");
-      output.innerHTML = "⏳ Generating image...";
+  if (!prompt.trim()) {
+    output.innerHTML = "❗ Please enter a prompt.";
+    return;
+  }
 
-      const res = await fetch("https://api.openai.com/v1/images/generations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Q5ie3zPMivhqt1OehA4LQphHSHssT3BlbkFJjga72PGH5g5N8ObdIsO5BTchQRvwPxYVteqr6z3WPhWLbpcx3BP2XWEUP5sOVDsSrFjjoPJpIA"
-        },
-        body: JSON.stringify({
-          prompt: prompt,
-          n: 1,
-          size: "512x512"
-        })
-      });
+  output.innerHTML = "⏳ Generating image...";
 
-      const data = await res.json();
-      const imageUrl = data.data[0].url;
+  try {
+    const res = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer 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"
+      },
+      body: JSON.stringify({
+        model: "dall-e-3",
+        prompt: prompt,
+        n: 1,
+        size: "1024x1024"
+      })
+    });
 
-      output.innerHTML = `
-        <img src="${imageUrl}" alt="Generated image" />
-        <br/>
-        <a href="${imageUrl}" download target="_blank">⬇️ Download</a>
-      `;
+    if (!res.ok) {
+      throw new Error(`API Error: ${res.status} ${res.statusText}`);
     }
-  </script>
-</body>
-</html>
+
+    const data = await res.json();
+    const imageUrl = data.data[0].url;
+
+    output.innerHTML = `
+      <img src="${imageUrl}" alt="Generated image" />
+      <br/>
+      <a href="${imageUrl}" download target="_blank">⬇️ Download</a>
+    `;
+  } catch (err) {
+    output.innerHTML = `<p>❌ Failed to generate image.<br><small>${err.message}</small></p>`;
+    console.error(err);
+  }
+}
+
